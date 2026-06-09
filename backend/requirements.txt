@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+websockets
+numpy
+geopy
+aiofiles
+python-multipart

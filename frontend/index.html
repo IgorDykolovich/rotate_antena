@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drone Tracker</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet/dist/leaflet.css"
+    />
+
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="sidebar">
+
+    <h2>Drone Tracker</h2>
+
+    <div class="panel">
+
+        <h3>Drone Telemetry</h3>
+
+        <p id="droneLat">LAT: 0</p>
+        <p id="droneLon">LON: 0</p>
+        <p id="droneAlt">ALT: 0m</p>
+
+    </div>
+
+    <div class="panel">
+
+        <h3>Antenna Position</h3>
+
+        <p id="homeLat">LAT: 0</p>
+        <p id="homeLon">LON: 0</p>
+        <p id="homeHeight">HEIGHT: 0m</p>
+
+    </div>
+
+    <div class="panel">
+
+        <h3>Tracking</h3>
+
+        <p id="distance">Distance: 0 km</p>
+        <p id="azimuth">Azimuth: 0°</p>
+        <p id="elevation">Elevation: 0°</p>
+        <p id="trackingError">Tracking Error: 0°</p>
+
+    </div>
+
+    <div class="panel">
+
+    <h3>Antenna Mechanics</h3>
+
+        <p id="currentAzimuth">
+            Current AZ: 0°
+        </p>
+
+        <p id="targetAzimuth">
+            Target AZ: 0°
+        </p>
+
+        <p id="currentElevation">
+            Current EL: 0°
+        </p>
+
+        <p id="targetElevation">
+            Target EL: 0°
+        </p>
+
+        <p id="azimuthError">
+            AZ Error: 0°
+        </p>
+
+        <p id="elevationError">
+            EL Error: 0°
+        </p>
+
+        <p id="antennaState">
+            State: IDLE
+        </p>
+        <p id="azimuthLimits">
+            AZ Limits: 0° - 360°
+        </p>
+
+        <p id="elevationLimits">
+            EL Limits: 0° - 90°
+        </p>
+    </div>
+   
+    <div class="panel">
+
+    <h3>Azimuth Compass</h3>
+
+    <div id="compassContainer">
+
+        <svg
+            id="compass"
+            width="220"
+            height="220"
+            viewBox="0 0 220 220">
+
+            <circle
+                cx="110"
+                cy="110"
+                r="90"
+                fill="none"
+                stroke="#555"
+                stroke-width="2"
+            />
+
+            <text x="110" y="18"
+                text-anchor="middle">N</text>
+
+            <text x="110" y="212"
+                text-anchor="middle">S</text>
+
+            <text x="18" y="115"
+                text-anchor="middle">W</text>
+
+            <text x="202" y="115"
+                text-anchor="middle">E</text>
+
+            <line
+                id="targetNeedle"
+                x1="110"
+                y1="110"
+                x2="110"
+                y2="30"
+                stroke="#ff4444"
+                stroke-width="4"
+            />
+
+            <line
+                id="currentNeedle"
+                x1="110"
+                y1="110"
+                x2="110"
+                y2="40"
+                stroke="#00ff88"
+                stroke-width="6"
+            />
+
+        </svg>
+
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <h3>Communication</h3>
+
+    <p id="connectionStatus">
+        Status: LOCAL
+    </p>
+
+    <p id="txAzimuth">
+        TX AZ: 0°
+    </p>
+
+    <p id="txElevation">
+        TX EL: 0°
+    </p>
+
+    <p id="rxAzimuth">
+        RX AZ: 0°
+    </p>
+
+    <p id="rxElevation">
+        RX EL: 0°
+    </p>
+
+</div>
+
+
+    <div class="panel">
+
+        <h3>System</h3>
+
+        <p id="systemStatus">
+            STATUS: LOCAL
+        </p>
+
+        <p id="trackerMode">
+            MODE: SIMULATION
+        </p>
+
+    </div>
+
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
