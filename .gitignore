@@ -1,0 +1,9 @@
+backend/state/__pycache__/drone_state.cpython-314.pyc
+backend/tracker/__pycache__/tracker.cpython-314.pyc
+backend/__pycache__/main.cpython-314.pyc
+backend/api/__pycache__/routes.cpython-314.pyc
+backend/api/__pycache__/telemetry.cpython-314.pyc
+backend/core/__pycache__/geometry.cpython-314.pyc
+backend/mavlink/__pycache__/__init__.cpython-314.pyc
+backend/mavlink/__pycache__/mavlink_client.cpython-314.pyc
+backend/__pycache__/main.cpython-314.pyc
