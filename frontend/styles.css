@@ -67,3 +67,78 @@ body {
     fill: white;
     font-size: 14px;
 }
+
+.state-locked {
+    color: #00ff88;
+    font-weight: bold;
+}
+
+.state-aligning {
+    color: #00ccff;
+    font-weight: bold;
+}
+
+.state-tracking {
+    color: #ffff00;
+    font-weight: bold;
+}
+
+.state-near-limit {
+    color: #ffaa00;
+    font-weight: bold;
+}
+
+.state-out-of-range {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.state-idle {
+    color: #cccccc;
+}
+
+#followButton {
+
+    width: 100%;
+
+    padding: 10px;
+
+    margin-bottom: 10px;
+
+    background: #333;
+    color: white;
+
+    border: none;
+
+    cursor: pointer;
+
+    font-weight: bold;
+}
+
+#followButton:hover {
+
+    background: #444;
+}
+
+#autoViewButton {
+
+    width: 100%;
+
+    padding: 10px;
+
+    margin-bottom: 10px;
+
+    background: #333;
+    color: white;
+
+    border: none;
+
+    cursor: pointer;
+
+    font-weight: bold;
+}
+
+#autoViewButton:hover {
+
+    background: #444;
+}

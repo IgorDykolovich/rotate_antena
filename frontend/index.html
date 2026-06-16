@@ -26,6 +26,14 @@
 
     </div>
 
+    <button id="followButton">
+        FOLLOW: OFF
+    </button>
+
+    <button id="autoViewButton">
+        AUTO VIEW
+    </button>
+
     <div class="panel">
 
         <h3>Antenna Position</h3>
@@ -75,7 +83,7 @@
             EL Error: 0°
         </p>
 
-        <p id="antennaState">
+        <p id="antennaState" class="state-idle">
             State: IDLE
         </p>
         <p id="azimuthLimits">
@@ -84,6 +92,9 @@
 
         <p id="elevationLimits">
             EL Limits: 0° - 90°
+        </p>
+        <p id="limitMargin">
+            Margin: 0°
         </p>
     </div>
    
