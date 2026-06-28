@@ -7,9 +7,13 @@ master = mavutil.mavlink_connection(
     baud=115200
 )
 
-msg = master.recv_match(
-    blocking=True,
-    timeout=10
-)
+print("Waiting for messages...")
 
-print(msg)
+while True:
+
+    msg = master.recv_match(
+        blocking=True,
+        timeout=5
+    )
+
+    print(msg)

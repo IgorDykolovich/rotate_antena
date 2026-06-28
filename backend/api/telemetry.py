@@ -2,7 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from state.drone_state import drone_state
+from models.builders import build_telemetry
 
+from models.telemetry import TelemetryModel
 router = APIRouter()
 
 
@@ -17,7 +19,7 @@ class TelemetryData(BaseModel):
 
 @router.post("/telemetry")
 async def update_telemetry(
-    data: TelemetryData
+    data: TelemetryUpdate
 ):
 
     drone_state["lat"] = data.lat
@@ -31,7 +33,10 @@ async def update_telemetry(
     }
 
 
-@router.get("/telemetry")
+@router.get(
+    "/telemetry",
+    response_model=TelemetryModel
+)
 async def get_telemetry():
 
-    return drone_state
+    return build_telemetry()
