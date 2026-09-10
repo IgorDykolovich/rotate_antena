@@ -5,7 +5,9 @@ from config import TELEMETRY_SOURCE
 from telemetry.simulator import SimulatorTelemetry
 from telemetry.mavlink import MavlinkTelemetry
 from telemetry.replay import ReplayTelemetry
-
+from websocket.publisher import publisher
+from websocket.messages import telemetry_message
+from state.drone_state import drone_state
 
 if TELEMETRY_SOURCE == "SIMULATOR":
 
@@ -53,6 +55,14 @@ class TelemetryManager:
 
                 await self.source.update()
 
+                await publisher.publish(
+
+                    telemetry_message(
+                        drone_state
+                    ),
+
+                    rate_limit=10
+                )
             except Exception as error:
 
                 print(

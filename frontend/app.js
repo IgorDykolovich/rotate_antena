@@ -1,95 +1,134 @@
+/*
+=========================================================
+Drone Tracker
+
+Module:
+app.js
+
+Purpose:
+Application lifecycle
+
+Version:
+3.0.1
+
+Author:
+Igor + ChatGPT
+=========================================================
+*/
+
 function updateAntennaTracking() {
 
     let azDiff =
-    antennaState.targetAzimuth -
-    antennaState.currentAzimuth;
+    AppState.tracker.targetAzimuth -
+    AppState.tracker.currentAzimuth;
 
     if (azDiff > 180) azDiff -= 360;
     if (azDiff < -180) azDiff += 360;
     if (Math.abs(azDiff) >
-        antennaState.rotationSpeed) {
+        AppState.antenna.rotationSpeed) {
 
-        antennaState.currentAzimuth +=
+        AppState.tracker.currentAzimuth +=
             Math.sign(azDiff) *
-            antennaState.rotationSpeed;
+            AppState.antenna.rotationSpeed;
     }
     else {
 
-        antennaState.currentAzimuth =
-            antennaState.targetAzimuth;
+        AppState.tracker.currentAzimuth =
+            AppState.tracker.targetAzimuth;
     }
     const elDiff =
-    antennaState.targetElevation -
-    antennaState.currentElevation;
+    AppState.tracker.targetElevation -
+    AppState.tracker.currentElevation;
 
     if (
         Math.abs(elDiff) >
-        antennaState.rotationSpeed
+        AppState.antenna.rotationSpeed
     ) {
-        antennaState.currentElevation +=
+        AppState.tracker.currentElevation +=
             Math.sign(elDiff) *
-            antennaState.rotationSpeed;
+            AppState.antenna.rotationSpeed;
     }
     else {
-        antennaState.currentElevation =
-            antennaState.targetElevation;
+        AppState.tracker.currentElevation =
+            AppState.tracker.targetElevation;
     }
-    antennaState.currentAzimuth =
-    (antennaState.currentAzimuth + 360) % 360;
+    AppState.tracker.currentAzimuth =
+    (AppState.tracker.currentAzimuth + 360) % 360;
 }
 
-async function initialize() {
-
-    createMarkers();
+function initializeUI() {
 
     setupFollowButton();
 
     setupAutoViewButton();
-
-    flightTrail.push([
-        dronePosition.lat,
-        dronePosition.lon
-    ]);
-
-    await calculate();
-
-    updateBeam();
-    updateTargetLine();
-    updateCoverageSector();
-    updateCompass();
-    
 }
 
-document.addEventListener('keydown', (e) => {
+function initializeMapObjects() {
 
-    if (e.key === 'ArrowLeft') {
+    createMarkers();
+}
 
-        dronePosition.heading -= 5;
-    }
-
-    if (e.key === 'ArrowRight') {
-
-        dronePosition.heading += 5;
-    }
-
-    dronePosition.heading =
-        (dronePosition.heading + 360) % 360;
-
-    updateDroneHeading();
-});
-
-setInterval(async () => {
+async function updateTracker() {
 
     await getTrackerStatus();
 
     simulateControllerFeedback();
+}
+
+function updateRenderer() {
 
     updateBeam();
 
     updateTargetLine();
 
     updateFlightTrail();
-    
+
+    updateCoverageSector();
+
+    updateCompass();
+}
+
+function updateUI() {
+
+    updateTelemetryUI();
+
+    updateRadioLinkUI();
+}
+
+function updateRadio() {
+
+    updateRadioLink();
+}
+
+async function mainLoop() {
+
+    if (telemetryMode !== TelemetryMode.MANUAL) {
+
+        await getTelemetry();
+
+    }
+
+    await updateTracker();
+
+    if (telemetryMode === TelemetryMode.MANUAL) {
+
+        await calculate();
+
+    }
+
+    updateRenderer();
+
+    updateUI();
+
+    updateRadio();
+}
+
+function renderAll() {
+
+    updateBeam();
+
+    updateTargetLine();
+
     updateCoverageSector();
 
     updateTelemetryUI();
@@ -99,14 +138,49 @@ setInterval(async () => {
     updateRadioLink();
 
     updateRadioLinkUI();
+}
 
-    if (followDrone) {
+async function loadInitialState() {
 
-        map.panTo([
-            dronePosition.lat,
-            dronePosition.lon
-        ]);
+    await getTelemetry();
+
+    await calculate();
+
+    await getTrackerStatus();
+}  
+
+async function initialize() {
+
+    initializeMapObjects();
+
+    initializeUI();
+
+    await loadInitialState();
+
+    renderAll();
+}
+
+document.addEventListener('keydown', (e) => {
+
+    if (e.key === 'ArrowLeft') {
+
+        AppState.telemetry.position.heading -= 5;
     }
-}, 100);
+
+    if (e.key === 'ArrowRight') {
+
+        AppState.telemetry.position.heading += 5;
+    }
+
+    AppState.telemetry.position.heading =
+        (AppState.telemetry.position.heading + 360) % 360;
+
+    updateDroneHeading();
+});
+
+setInterval(
+    mainLoop,
+    100
+);
 
 initialize();

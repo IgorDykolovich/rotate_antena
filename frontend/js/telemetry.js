@@ -2,6 +2,12 @@ async function calculate() {
 
     let data; 
     try{    
+        console.log("DRONE");
+
+        console.log({
+            home: homePosition,
+            drone: dronePosition
+        });
         const response = await fetch(
             'http://localhost:8000/api/v1/calculate',
             {
@@ -10,9 +16,9 @@ async function calculate() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    home: homePosition,
-                    drone: dronePosition
-                })
+                    home: AppState.home,
+                    drone: AppState.telemetry.position
+})
             }
         );
 
@@ -20,19 +26,19 @@ async function calculate() {
     }
     catch (error) {
 
-    console.error(error);
+        console.error(error);
 
-    document.getElementById(
-        'connectionStatus'
-    ).innerText =
-        'Status: DISCONNECTED';
+        document.getElementById(
+            'connectionStatus'
+        ).innerText =
+            'Status: DISCONNECTED';
+
+        return;
     }
-    antennaState.targetAzimuth =
-    data.azimuth_deg;
-
-    antennaState.targetElevation =
-    data.elevation_deg;
-
+    setTrackerTarget(
+        data.azimuth_deg,
+        data.elevation_deg
+    );
     sendToController();
 
     await sendTrackerCommand();
@@ -50,6 +56,12 @@ async function calculate() {
     updateLine();
 }
 
+function useSimulatorTelemetry() {
+
+    telemetryMode = TelemetryMode.SIMULATOR;
+
+} 
+
 async function getTelemetry() {
 
     try {
@@ -59,19 +71,20 @@ async function getTelemetry() {
         );
 
         const data = await response.json();
+        setDronePosition(
+            "FROM TELEMETRY",
+            data.position.lat,
+            data.position.lon,
+            data.position.altitude
+        );
 
-        dronePosition.lat =
-            data.lat;
+        setDroneAttitude(
+            data.attitude.heading,
+            data.attitude.roll,
+            data.attitude.pitch
+        );
 
-        dronePosition.lon =
-            data.lon;
-
-        dronePosition.altitude =
-            data.altitude;
-
-        dronePosition.heading =
-            data.heading;
-
+        await calculate();
     } catch(error) {
 
         console.error(error);

@@ -1,38 +1,24 @@
-const controllerState = {
-
-    connected: true,
-
-    txAzimuth: 0,
-    txElevation: 0,
-
-    rxAzimuth: 0,
-    rxElevation: 0,
-
-    lastUpdate: Date.now()
-};
-
-
 function simulateControllerFeedback() {
 
-    controllerState.rxAzimuth =
-        antennaState.currentAzimuth;
+    AppState.controller.rxAzimuth =
+        AppState.tracker.currentAzimuth;
 
-    controllerState.rxElevation =
-        antennaState.currentElevation;
+    AppState.controller.rxElevation =
+        AppState.tracker.currentElevation;
 
-    controllerState.lastUpdate =
+    AppState.controller.lastUpdate =
         Date.now();
 }
 
 function sendToController() {
 
-    controllerState.txAzimuth =
-        antennaState.targetAzimuth;
+    AppState.controller.txAzimuth =
+        AppState.tracker.targetAzimuth;
 
-    controllerState.txElevation =
-        antennaState.targetElevation;
+    AppState.controller.txElevation =
+        AppState.tracker.targetElevation;
 
-    controllerState.lastUpdate =
+    AppState.controller.lastUpdate =
         Date.now();
 }
 
@@ -68,10 +54,10 @@ async function sendTrackerCommand() {
 
                 body: JSON.stringify({
                     azimuth:
-                        antennaState.targetAzimuth,
+                        AppState.tracker.targetAzimuth,
 
                     elevation:
-                        antennaState.targetElevation
+                        AppState.tracker.targetElevation
                 })
             }
         );
@@ -83,7 +69,6 @@ async function sendTrackerCommand() {
 }
 
 async function getTrackerStatus() {
-
     try {
 
         const response = await fetch(
@@ -92,16 +77,18 @@ async function getTrackerStatus() {
 
         const data = await response.json();
 
-        antennaState.currentAzimuth =
+        AppState.tracker.currentAzimuth =
             data.current_azimuth;
 
-        antennaState.currentElevation =
+        AppState.tracker.currentElevation =
             data.current_elevation;
 
-        antennaState.targetAzimuth =
+        console.log(AppState.tracker);
+
+        AppState.tracker.targetAzimuth =
             data.target_azimuth;
 
-        antennaState.targetElevation =
+        AppState.tracker.targetElevation =
             data.target_elevation;
 
     } catch(error) {
@@ -123,19 +110,19 @@ function getAngleError(a, b) {
 
 function isTargetReachable() {
 
-    const azOk =
-        antennaState.targetAzimuth >=
-            antennaState.azimuthMin &&
+   const azOk =
+    AppState.tracker.targetAzimuth >=
+        AppState.antenna.azimuthMin &&
 
-        antennaState.targetAzimuth <=
-            antennaState.azimuthMax;
+    AppState.tracker.targetAzimuth <=
+        AppState.antenna.azimuthMax;
 
-    const elOk =
-        antennaState.targetElevation >=
-            antennaState.elevationMin &&
+const elOk =
+    AppState.tracker.targetElevation >=
+        AppState.antenna.elevationMin &&
 
-        antennaState.targetElevation <=
-            antennaState.elevationMax;
+    AppState.tracker.targetElevation <=
+        AppState.antenna.elevationMax;
 
     return azOk && elOk;
 }
@@ -145,10 +132,10 @@ function isNearLimit() {
     const warningZone = 10;
 
     return (
-        antennaState.targetAzimuth <=
-            antennaState.azimuthMin + warningZone ||
+        AppState.tracker.targetAzimuth <=
+            AppState.antenna.azimuthMin + warningZone ||
 
-        antennaState.targetAzimuth >=
-            antennaState.azimuthMax - warningZone
-    );
+        AppState.tracker.targetAzimuth >=
+            AppState.antenna.azimuthMax - warningZone
+);
 }

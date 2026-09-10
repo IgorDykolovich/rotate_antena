@@ -1,5 +1,8 @@
 const map = L.map('map').setView(
-    [homePosition.lat, homePosition.lon],
+    [
+        AppState.home.lat,
+        AppState.home.lon
+    ],
     13
 );
 
@@ -28,7 +31,7 @@ const droneIcon = L.divIcon({
         <div id="droneIcon" style="
             width:32px;
             height:32px;
-            transform: rotate(${dronePosition.heading}deg);
+            transform: rotate(${AppState.telemetry.attitude.heading}deg);
         ">
             <svg
                 width="32"
@@ -87,46 +90,77 @@ const antennaIcon = L.divIcon({
     iconAnchor: [14, 14]
 });
 
-function createMarkers() {
+function createHomeMarker() {
 
     homeMarker = L.marker([
-        homePosition.lat,
-        homePosition.lon
+        AppState.home.lat,
+        AppState.home.lon
     ], {
         draggable: true,
         icon: antennaIcon
     }).addTo(map);
 
-    homeMarker.on('dragend', async (e) => {
+}
 
-    const pos = e.target.getLatLng();
-
-    homePosition.lat = pos.lat;
-    homePosition.lon = pos.lng;
-
-    updateTelemetryUI();
-
-    await calculate();
-});
+function createDroneMarker() {
 
     droneMarker = L.marker([
-        dronePosition.lat,
-        dronePosition.lon
+        AppState.telemetry.position.lat,
+        AppState.telemetry.position.lon
     ], {
         draggable: true,
         icon: droneIcon
     }).addTo(map);
 
-    droneMarker.on('drag', async (e) => {
+}
+
+function setupHomeMarkerEvents() {
+
+    homeMarker.on('dragend', async (e) => {
 
         const pos = e.target.getLatLng();
 
-        dronePosition.lat = pos.lat;
-        dronePosition.lon = pos.lng;
+        AppState.home.lat = pos.lat;
+        AppState.home.lon = pos.lng;
+
+        updateTelemetryUI();
 
         await calculate();
+
     });
+
 }
+
+function setupDroneMarkerEvents() {
+
+    droneMarker.on('drag', async (e) => {
+        telemetryMode = TelemetryMode.MANUAL;
+
+        const pos = e.target.getLatLng();
+
+        AppState.telemetry.position.lat = pos.lat;
+        AppState.telemetry.position.lon = pos.lng;
+
+        await calculate();
+
+    });
+
+}
+
+function createMarkers() {
+
+    createHomeMarker()
+    createDroneMarker()
+
+    setupHomeMarkerEvents()
+    setupDroneMarkerEvents()
+}
+
+/*
+========================================
+Map Lines
+========================================
+*/
 
 function updateLine() {
 
@@ -139,8 +173,14 @@ function updateLine() {
     }
 
     const points = [
-        [homePosition.lat, homePosition.lon],
-        [dronePosition.lat, dronePosition.lon]
+        [
+            AppState.home.lat,
+            AppState.home.lon
+        ],
+        [
+            AppState.telemetry.position.lat,
+            AppState.telemetry.position.lon
+        ]
     ];
 
     line = L.polyline(points, {
@@ -149,10 +189,16 @@ function updateLine() {
     }).addTo(map);
 
     const centerLat =
-        (homePosition.lat + dronePosition.lat) / 2;
+        (
+            AppState.home.lat +
+            AppState.telemetry.position.lat
+        ) / 2;
 
     const centerLon =
-        (homePosition.lon + dronePosition.lon) / 2;
+        (
+            AppState.home.lon +
+            AppState.telemetry.position.lon
+        ) / 2;
 
     const distanceText =
         document.getElementById('distance')
@@ -183,16 +229,40 @@ function updateLine() {
     ).addTo(map);
 }
 
-function updateBeam() {
+function updateTargetLine() {
 
-    if (beamLine) {
-        map.removeLayer(beamLine);
+    if (targetLine) {
+        map.removeLayer(targetLine);
     }
+
+    targetLine = L.polyline([
+        [
+            AppState.home.lat,
+            AppState.home.lon
+        ],
+        [
+            AppState.telemetry.position.lat,
+            AppState.telemetry.position.lon
+        ]
+        ], {
+            color: '#ff4444',
+            weight: 2,
+            opacity: 0.9,
+            dashArray: '8, 8'
+        }).addTo(map);
+    }
+
+function updateBeam() {
+    console.log(
+        "Beam",
+        AppState.tracker.currentAzimuth
+    );
+    removeLayerIfExists(beamLine);
 
     const beamLengthKm = 3;
 
     const angleRad =
-        antennaState.currentAzimuth *
+        AppState.tracker.currentAzimuth *
         Math.PI / 180;
 
     const latOffset =
@@ -203,19 +273,19 @@ function updateBeam() {
         (beamLengthKm /
         (111 *
         Math.cos(
-            homePosition.lat *
+            AppState.home.lat *
             Math.PI / 180
         ))) *
         Math.sin(angleRad);
 
     const beamEndLat =
-        homePosition.lat + latOffset;
+        AppState.home.lat + latOffset;
 
     const beamEndLon =
-        homePosition.lon + lonOffset;
+        AppState.home.lon + lonOffset;
 
     beamLine = L.polyline([
-        [homePosition.lat, homePosition.lon],
+        [AppState.home.lat, AppState.home.lon],
         [beamEndLat, beamEndLon]
     ], {
         color: '#00ffff',
@@ -224,25 +294,13 @@ function updateBeam() {
     }).addTo(map);
 }
 
-function updateTargetLine() {
-
-    if (targetLine) {
-        map.removeLayer(targetLine);
-    }
-
-    targetLine = L.polyline([
-        [homePosition.lat, homePosition.lon],
-        [dronePosition.lat, dronePosition.lon]
-    ], {
-        color: '#ff4444',
-        weight: 2,
-        opacity: 0.9,
-        dashArray: '8, 8'
-    }).addTo(map);
-}
+/*
+========================================
+Coverage
+========================================
+*/
 
 function updateCoverageSector() {
-
     if (coverageSector) {
         map.removeLayer(coverageSector);
     }
@@ -252,13 +310,13 @@ function updateCoverageSector() {
     const points = [];
 
     points.push([
-        homePosition.lat,
-        homePosition.lon
+        AppState.home.lat,
+        AppState.home.lon
     ]);
 
     for (
-        let angle = antennaState.azimuthMin;
-        angle <= antennaState.azimuthMax;
+        let angle = AppState.antenna.azimuthMin;
+        angle <= AppState.antenna.azimuthMax;
         angle += 5
     ) {
 
@@ -266,17 +324,17 @@ function updateCoverageSector() {
             angle * Math.PI / 180;
 
         const lat =
-            homePosition.lat +
+            AppState.home.lat +
             (radiusKm / 111) *
             Math.cos(rad);
 
         const lon =
-            homePosition.lon +
+            AppState.home.lon +
             (radiusKm /
             (
                 111 *
                 Math.cos(
-                    homePosition.lat *
+                    AppState.home.lat *
                     Math.PI / 180
                 )
             )) *
@@ -286,8 +344,8 @@ function updateCoverageSector() {
     }
 
     points.push([
-        homePosition.lat,
-        homePosition.lon
+        AppState.home.lat,
+        AppState.home.lon
     ]);
 
     coverageSector = L.polygon(
@@ -300,11 +358,17 @@ function updateCoverageSector() {
     ).addTo(map);
 }
 
+/*
+========================================
+Flight Trail
+========================================
+*/
+
 function updateFlightTrail() {
 
     const newPoint = [
-        dronePosition.lat,
-        dronePosition.lon
+        AppState.telemetry.position.lat,
+        AppState.telemetry.position.lon
     ];
 
     if (flightTrail.length > 0) {
@@ -347,6 +411,12 @@ function updateFlightTrail() {
     ).addTo(map);
 }
 
+/*
+========================================
+Drone
+========================================
+*/
+
 function updateDroneHeading() {
 
     const icon =
@@ -355,7 +425,23 @@ function updateDroneHeading() {
     if (!icon) return;
 
     icon.style.transform =
-        `rotate(${dronePosition.heading}deg)`;
+        `rotate(${AppState.telemetry.attitude.heading}deg)`;
+}
+
+/*
+========================================
+Utilities
+========================================
+*/
+
+function removeLayerIfExists(layer) {
+
+    if (layer) {
+
+        map.removeLayer(layer);
+
+    }
+
 }
 
 function distanceBetweenPoints(
@@ -395,10 +481,13 @@ function distanceBetweenPoints(
 
 map.on('contextmenu', async function(e) {
 
-    homePosition.lat = e.latlng.lat;
-    homePosition.lon = e.latlng.lng;
+    AppState.home.lat = e.latlng.lat;
+    AppState.home.lon = e.latlng.lng;
 
     homeMarker.setLatLng(e.latlng);
-
+   
+    updateTelemetryUI();
+   
     await calculate();
+
 });

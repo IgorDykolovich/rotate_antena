@@ -1,83 +1,112 @@
-function updateTelemetryUI() {
-
-    document.getElementById('droneLat').innerText =
-        `LAT: ${dronePosition.lat.toFixed(6)}`;
-
-    document.getElementById('droneLon').innerText =
-        `LON: ${dronePosition.lon.toFixed(6)}`;
-
-    document.getElementById('droneAlt').innerText =
-        `ALT: ${dronePosition.altitude}m`;
+function updateHomePanel() {
 
     document.getElementById('homeLat').innerText =
-        `LAT: ${homePosition.lat.toFixed(6)}`;
+        `LAT: ${AppState.home.lat.toFixed(6)}`;
 
     document.getElementById('homeLon').innerText =
-        `LON: ${homePosition.lon.toFixed(6)}`;
+        `LON: ${AppState.home.lon.toFixed(6)}`;
 
     document.getElementById('homeHeight').innerText =
-        `HEIGHT: ${homePosition.height}m`;
-        const trackingError = getAngleError(
-            antennaState.targetAzimuth,
-            antennaState.currentAzimuth
+        `HEIGHT: ${AppState.home.height}m`;
+
+}
+
+function updateDronePanel() {
+
+    document.getElementById('droneLat').innerText =
+        `LAT: ${AppState.telemetry.position.lat.toFixed(6)}`;
+
+    document.getElementById('droneLon').innerText =
+        `LON: ${AppState.telemetry.position.lon.toFixed(6)}`;
+
+    document.getElementById('droneAlt').innerText =
+        `ALT: ${AppState.telemetry.position.altitude}m`;
+
+}
+
+function calculateTrackingErrors() {
+
+    const trackingError = getAngleError(
+        AppState.tracker.targetAzimuth,
+        AppState.tracker.currentAzimuth
+        );
+
+    const azimuthError = trackingError;
+
+    const elevationError = Math.abs(
+        AppState.tracker.targetElevation -
+        AppState.tracker.currentElevation
     );
+
+    return {
+        trackingError,
+        azimuthError,
+        elevationError
+    };
+}
+
+function updateTrackerPanel() {
+
+    const {
+        trackingError,
+        azimuthError,
+        elevationError
+    } = calculateTrackingErrors();
 
     document.getElementById('trackingError').innerText =
         `Tracking Error: ${trackingError.toFixed(1)}°`;
-        document.getElementById('currentAzimuth').innerText =
-    `Current AZ: ${antennaState.currentAzimuth.toFixed(1)}°`;
+
+    document.getElementById('currentAzimuth').innerText =
+        `Current AZ: ${AppState.tracker.currentAzimuth.toFixed(1)}°`;
 
     document.getElementById('targetAzimuth').innerText =
-        `Target AZ: ${antennaState.targetAzimuth.toFixed(1)}°`;
+        `Target AZ: ${AppState.tracker.targetAzimuth.toFixed(1)}°`;
 
     document.getElementById('currentElevation').innerText =
-        `Current EL: ${antennaState.currentElevation.toFixed(1)}°`;
+        `Current EL: ${AppState.tracker.currentElevation.toFixed(1)}°`;
 
     document.getElementById('targetElevation').innerText =
-        `Target EL: ${antennaState.targetElevation.toFixed(1)}°`;
-    const azError = getAngleError(
-        antennaState.targetAzimuth,
-        antennaState.currentAzimuth
-    );
-
-    const elError = Math.abs(
-        antennaState.targetElevation -
-        antennaState.currentElevation
-    );
+        `Target EL: ${AppState.tracker.targetElevation.toFixed(1)}°`;
 
     document.getElementById('azimuthError').innerText =
-        `AZ Error: ${azError.toFixed(1)}°`;
+        `AZ Error: ${azimuthError.toFixed(1)}°`;
 
     document.getElementById('elevationError').innerText =
-        `EL Error: ${elError.toFixed(1)}°`;
+        `EL Error: ${elevationError.toFixed(1)}°`;
+}
+
+function updateAntennaStatePanel() {
+
+    const {
+        azimuthError
+    } = calculateTrackingErrors();
 
     let state = 'IDLE';
 
-   if (!isTargetReachable()) {
+    if (!isTargetReachable()) {
 
         state = 'OUT OF RANGE';
-    }
-    else if (isNearLimit()) {
+
+    } else if (isNearLimit()) {
 
         state = 'NEAR LIMIT';
-    }
-    else if (azError > 5) {
+
+    } else if (azimuthError > 5) {
 
         state = 'TRACKING';
-    }
-    else if (azError > 1) {
+
+    } else if (azimuthError > 1) {
 
         state = 'ALIGNING';
-    }
-    else {
+
+    } else {
 
         state = 'LOCKED';
+
     }
 
     const stateElement =
-    document.getElementById(
-        'antennaState'
-    );
+        document.getElementById('antennaState');
 
     stateElement.innerText =
         `State: ${state}`;
@@ -86,78 +115,87 @@ function updateTelemetryUI() {
 
     switch (state) {
 
-    case 'LOCKED':
-        stateElement.classList.add(
-            'state-locked'
-        );
-        break;
+        case 'LOCKED':
+            stateElement.classList.add('state-locked');
+            break;
 
-    case 'ALIGNING':
-        stateElement.classList.add(
-            'state-aligning'
-        );
-        break;
+        case 'ALIGNING':
+            stateElement.classList.add('state-aligning');
+            break;
 
-    case 'TRACKING':
-        stateElement.classList.add(
-            'state-tracking'
-        );
-        break;
+        case 'TRACKING':
+            stateElement.classList.add('state-tracking');
+            break;
 
-    case 'NEAR LIMIT':
-        stateElement.classList.add(
-            'state-near-limit'
-        );
-        break;
+        case 'NEAR LIMIT':
+            stateElement.classList.add('state-near-limit');
+            break;
 
-    case 'OUT OF RANGE':
-        stateElement.classList.add(
-            'state-out-of-range'
-        );
-        break;
+        case 'OUT OF RANGE':
+            stateElement.classList.add('state-out-of-range');
+            break;
 
-    default:
-        stateElement.classList.add(
-            'state-idle'
-        );
+        default:
+            stateElement.classList.add('state-idle');
+    }
 }
+
+function updateControllerPanel() {
+
     document.getElementById('txAzimuth').innerText =
-    `TX AZ: ${controllerState.txAzimuth.toFixed(1)}°`;
+        `TX AZ: ${AppState.controller.txAzimuth.toFixed(1)}°`;
 
     document.getElementById('txElevation').innerText =
-        `TX EL: ${controllerState.txElevation.toFixed(1)}°`;
+        `TX EL: ${AppState.controller.txElevation.toFixed(1)}°`;
 
     document.getElementById('rxAzimuth').innerText =
-        `RX AZ: ${controllerState.rxAzimuth.toFixed(1)}°`;
+        `RX AZ: ${AppState.controller.rxAzimuth.toFixed(1)}°`;
 
     document.getElementById('rxElevation').innerText =
-        `RX EL: ${controllerState.rxElevation.toFixed(1)}°`;  
-        
+        `RX EL: ${AppState.controller.rxElevation.toFixed(1)}°`;
+}
+
+function updateLimitsPanel() {
+
     document.getElementById('azimuthLimits').innerText =
-        `AZ Limits: ${antennaState.azimuthMin}° - ${antennaState.azimuthMax}°`;
+        `AZ Limits: ${AppState.antenna.azimuthMin}° - ${AppState.antenna.azimuthMax}°`;
 
     document.getElementById('elevationLimits').innerText =
-        `EL Limits: ${antennaState.elevationMin}° - ${antennaState.elevationMax}°`;
-    
-        const margin = Math.min(
+        `EL Limits: ${AppState.antenna.elevationMin}° - ${AppState.antenna.elevationMax}°`;
+
+    const margin = Math.min(
         Math.abs(
-            antennaState.targetAzimuth -
-            antennaState.azimuthMin
+            AppState.tracker.targetAzimuth -
+            AppState.antenna.azimuthMin
         ),
         Math.abs(
-            antennaState.azimuthMax -
-            antennaState.targetAzimuth
+            AppState.antenna.azimuthMax -
+            AppState.tracker.targetAzimuth
         )
     );
 
     document.getElementById('limitMargin').innerText =
         `Margin: ${margin.toFixed(1)}°`;
 }
+function updateTelemetryUI() {
+
+    updateHomePanel()
+
+    updateDronePanel()
+
+    updateTrackerPanel()
+
+    updateAntennaStatePanel()
+
+    updateLimitsPanel()
+
+    updateControllerPanel()
+}
 
 function updateCompass() {
     if (
-        antennaState.currentAzimuth === undefined ||
-        antennaState.targetAzimuth === undefined
+        AppState.tracker.currentAzimuth === undefined ||
+        AppState.tracker.targetAzimuth === undefined
     ) {
         return;
     }
@@ -177,7 +215,7 @@ function updateCompass() {
     current.setAttribute(
         'transform',
         `rotate(
-            ${antennaState.currentAzimuth}
+            ${AppState.tracker.currentAzimuth}
             110
             110
         )`
@@ -186,7 +224,7 @@ function updateCompass() {
     target.setAttribute(
         'transform',
         `rotate(
-            ${antennaState.targetAzimuth}
+            ${AppState.tracker.targetAzimuth}
             110
             110
         )`
@@ -231,13 +269,13 @@ function setupAutoViewButton() {
         );
 
             bounds.extend([
-                homePosition.lat,
-                homePosition.lon
+                AppState.home.lat,
+                AppState.home.lon
             ]);
 
             bounds.extend([
-                dronePosition.lat,
-                dronePosition.lon
+                AppState.telemetry.position.lat,
+                AppState.telemetry.position.lon
             ]);
 
             map.fitBounds(

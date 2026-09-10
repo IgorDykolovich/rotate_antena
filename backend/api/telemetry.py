@@ -19,7 +19,7 @@ class TelemetryData(BaseModel):
 
 @router.post("/telemetry")
 async def update_telemetry(
-    data: TelemetryUpdate
+    data: TelemetryData
 ):
 
     drone_state["lat"] = data.lat

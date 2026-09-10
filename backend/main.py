@@ -7,6 +7,9 @@ from api.telemetry import (router as telemetry_router)
 from mavlink.mavlink_listener import (
     mavlink_listener
 ) 
+from websocket.routers import (
+    router as websocket_router
+)
 
 import asyncio
 
@@ -34,5 +37,5 @@ async def startup():
         tracker_simulator()
     )
     await telemetry.start()
-    
 app.include_router(telemetry_router, prefix="/api/v1")
+app.include_router(websocket_router)
